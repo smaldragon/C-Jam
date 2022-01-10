@@ -310,8 +310,8 @@ int main(void)
     const int canvasWidth = 300;
     const int canvasHeight = 160;
     
-    const int screenWidth = 300;
-    const int screenHeight = 160;
+    const int screenWidth = 300*3;
+    const int screenHeight = 160*3;
 
     InitWindow(screenWidth, screenHeight, "jam game");
     InitAudioDevice();
@@ -327,6 +327,7 @@ int main(void)
     PlayMusicStream(bgm);
     SetSoundVolume(fxMove, 0.5f);
     SetSoundVolume(fxSelect, 0.5f);
+    Texture2D background = LoadTexture("assets/background_2.png");
 
     Iventory inv;
     inv.cash = 100;
@@ -361,7 +362,10 @@ int main(void)
 
     State state = MAIN;
 
-    
+    int square_offset[canvasWidth/10];
+    for (int i=0;i<canvasWidth/10;i++) {
+        square_offset[i]=GetRandomValue(0,canvasHeight);
+    }
 
     while (!WindowShouldClose()) {
         UpdateMusicStream(bgm);
@@ -493,8 +497,23 @@ int main(void)
             Drawing
         */
         BeginDrawing();
-        //BeginTextureMode(canvas);
+        BeginTextureMode(canvas);
             ClearBackground(BLACK);
+            //DrawTexture(background,0,0,WHITE);
+            double t = t = GetTime();
+            for (int i=0;i<canvasWidth;i+=10) {
+                Color c[5] = {
+                    BLUE,
+                    GREEN,
+                    PURPLE,
+                    RED,
+                    ORANGE
+                };
+                int y = ((int)(t*15)+square_offset[i/10])%(canvasHeight+10);
+                int trans = 255-y*2;
+                if (trans<0)trans=0;
+                DrawRectangle(i,canvasHeight-y,10,10,(Color){c[city].r,c[city].g,c[city].b,trans});
+            }
             DrawInventory(inv,font,0,0);
             DrawTime(day,time,city,font,230,0);
             switch (state)
@@ -512,7 +531,7 @@ int main(void)
                     if (shop_buy_inv[city][i].cost > inv.cash) {color1 = DARKGRAY; color2 = RED;} 
                     DrawShop(shop_buy_inv[city][i],color1,color2,font,i*60,125);
                 }
-                DrawTextEx(font,"Cancel",(Vector2){240,130},16,1,DARKGRAY);
+                DrawTextEx(font,"Cancel",(Vector2){240,130},16,1,LIGHTGRAY);
             break;
             case SELL:
                 DrawSelectArrow(selected,font,0,135);
@@ -523,7 +542,7 @@ int main(void)
                     if (shop_sell_inv[city][i].amount > inv.gates[shop_sell_inv[city][i].gate]) {color1 = DARKGRAY; color2 = RED;} 
                     DrawShop(shop_sell_inv[city][i],color1,color2,font,i*60,125);
                 }
-                DrawTextEx(font,"Cancel",(Vector2){240,130},16,1,DARKGRAY);
+                DrawTextEx(font,"Cancel",(Vector2){240,130},16,1,LIGHTGRAY);
             break;
             case CRAFT:
                 DrawSelectArrow(selected,font,0,135);
@@ -531,7 +550,7 @@ int main(void)
                 for (int i=0;i<4;i++) {
                 DrawRecipe(inv,inv.blueprints[i],font,5+i*60,115);
                 }
-                DrawTextEx(font,"Cancel",(Vector2){240,130},16,1,DARKGRAY);
+                DrawTextEx(font,"Cancel",(Vector2){240,130},16,1,LIGHTGRAY);
             break;
             case SEARCH:
                 switch (search_roll)
@@ -554,21 +573,23 @@ int main(void)
                 DrawTravelMenu(font,0,135);
             break;
             }
-        //EndTextureMode();
+        EndTextureMode();
         float scale = 2.0f;
-        /*DrawTexturePro(
+        DrawTexturePro(
         canvas.texture, 
         (Rectangle){ 0.0f, 0.0f,(float)canvasWidth,(float)-canvasHeight },
         (Rectangle){0,0,(float)screenWidth,(float)screenHeight},
         (Vector2){0,0},
         0.0f,
         WHITE
-        );*/
+        );
         EndDrawing();
     }
     // Unload Assets
     UnloadFont(font);
     UnloadSound(fxMove);
+    UnloadSound(fxSelect);
+    UnloadTexture(background);
     CloseWindow();
 
     return 0;
